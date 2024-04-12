@@ -7,6 +7,7 @@ from client import clients_bp
 from login import login_bp, token_required
 from produits import fetch_produits_by_criteria
 
+
 app = Flask(__name__)
 
 

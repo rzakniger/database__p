@@ -1,6 +1,6 @@
 # Fichiers et répertoires spécifiques à Python
 *.pyc
-__pycache__/
+__pycache__
 venv/
 .env
 

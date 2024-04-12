@@ -1,0 +1,14 @@
+# Fichiers et répertoires spécifiques à Python
+*.pyc
+__pycache__/
+venv/
+.env
+
+# Fichiers spécifiques à l'environnement de développement
+.idea/
+.vscode/
+
+# Fichiers de cache et de sauvegarde
+.cache/
+*.log
+*.bak

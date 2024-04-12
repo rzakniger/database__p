@@ -1,0 +1,26 @@
+
+
+[
+{
+    "username":"rzakfirst",
+    "password":"97571843"
+},
+{
+    "article": "Chemise",
+    "quantite": 2,
+    "refid": 123,
+    "idtelephone": 98815481,
+    "montant": 3000,
+    "mtotal": 1000,
+    "daterdv": "2024-04-15"
+},
+
+{
+    "nom": "Nom du client",
+    "telephone": "Numéro de téléphone du client",
+    "adresse": "Adresse du client",
+    "codepromo": "Code promotionnel du client"
+}
+
+
+]

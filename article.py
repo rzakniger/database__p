@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from flask import jsonify
+from produits import fetch_produits_by_criteria
 
 def modifier_articles(request):
     data = request.json
@@ -49,9 +50,11 @@ def get_articles(identifier=None, order_by=None, order=None, only_retired=None):
         if order and order.lower() in ['asc', 'desc']:
             query += f' {order}'
 
+ 
+
     cursor.execute(query, parameters)
     articles = [
-        {
+       {         
             'id': row[0],
             'article': row[1],
             'quantite': row[2],
@@ -59,10 +62,12 @@ def get_articles(identifier=None, order_by=None, order=None, only_retired=None):
             'idtelephone': row[4],
             'montant': row[5],
             'mtotal': row[6],
-            'datedepot': row[7],
-            'daterdv': row[8],
-            'datemiseajour': row[9],
-            'retirer': row[10]
+            'refagent': row[7],
+            'refagence': row[8],
+            'datedepot': row[9],
+            'daterdv': row[10],
+            'datemiseajour': row[11],
+            'retirer': row[12]
         }
         for row in cursor.fetchall()
     ]

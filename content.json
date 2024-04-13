@@ -6,12 +6,10 @@
     "password":"97571843"
 },
 {
-    "article": "Chemise",
+    "article": "1",
     "quantite": 2,
     "refid": 123,
     "idtelephone": 98815481,
-    "montant": 3000,
-    "mtotal": 1000,
     "daterdv": "2024-04-15"
 },
 

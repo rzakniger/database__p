@@ -57,6 +57,11 @@ def login():
         # Créer une réponse avec le token dans les cookies
         response = make_response(jsonify({'message': 'Login successful'}))
         response.set_cookie('token', token, httponly=True)
+        from auth import get_user_variables, is_authenticated
+        from lastseen import update_last_seen
+        if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
         return response, 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 401

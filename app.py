@@ -6,7 +6,9 @@ from produits import fetch_produits_by_criteria
 from agence import agence_bp
 from database import add_client, add_article, get_clients, repartir_montant
 from article import modifier_articles, get_articles
-from facture import enregistrer_facture, fetch_facture_info
+from auth import get_user_variables, is_authenticated
+from lastseen import update_last_seen
+
 
 app = Flask(__name__)
 
@@ -29,11 +31,15 @@ def create_article():
     idtelephone = data['idtelephone']  # Téléphone du client
     daterdv = data['daterdv']
 
+        # Insérer l'article dans la base de données
     add_article(article, quantite, refid, idtelephone, daterdv)
 
+         
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
 
     return jsonify({'message': 'Article added successfully'}), 201
-
 
     
 @app.route('/articles', methods=['GET'])
@@ -43,12 +49,18 @@ def fetch_articles():
     order = request.args.get('order')
     only_retired = request.args.get('only_retired')
     articles = get_articles(identifier, order_by, order, only_retired)
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
     return jsonify(articles)
 
 # Route pour modifier les articlesS
 @app.route('/articles/modifier', methods=['PUT'])
 @token_required
 def modifier_articles_route():
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
     return modifier_articles(request)
 
 
@@ -60,6 +72,9 @@ def route_repartir_montant():
     refid = data['refid']
     idtelephone = data['idtelephone']
     montant_avance = data['montant_avance']
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
     result = repartir_montant(refid, idtelephone, montant_avance)
     return jsonify(result)
 
@@ -72,7 +87,11 @@ def facturer():
     reftelephone = data.get('reftelephone')
     montant_avance = data.get('montant_avance')
     result = enregistrer_facture(refid, montant_avance)
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
     return jsonify({'message': result})
+
 
 
 @app.route('/facture/info', methods=['GET'])
@@ -85,6 +104,10 @@ def get_facture_info():
     
     facture_info = fetch_facture_info(id, refid, dateref, refagent, refagence)
     
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
+    
     return jsonify(facture_info)
 
 @app.route('/produits', methods=['GET'])
@@ -96,6 +119,10 @@ def get_produits():
 
     # Utiliser la fonction fetch_produits_by_criteria pour obtenir les produits en fonction des critères
     produits = fetch_produits_by_criteria(produit_id=produit_id, nom=nom, prix=prix)
+
+    if is_authenticated():   
+            user_id, telephone, username, agence, role, privileges = get_user_variables()
+            update_last_seen(user_id)
 
     if produits:
         return jsonify(produits), 200

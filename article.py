@@ -74,3 +74,62 @@ def get_articles(identifier=None, order_by=None, order=None, only_retired=None):
 
     conn.close()
     return articles
+
+import sqlite3
+
+def calculate_article_statistics(refid=None, idtelephone=None, refagent=None, refagence=None, start_date=None, end_date=None, retirer=None):
+    conn = sqlite3.connect('data.db')
+    cursor = conn.cursor()
+
+    query = 'SELECT SUM(quantite) AS total_quantite, SUM(mtotal) AS total_montant FROM articles'
+    conditions = []
+    parameters = []
+
+    # Ajouter les conditions de filtrage en fonction des paramètres fournis
+    if refid:
+        conditions.append('refid=?')
+        parameters.append(refid)
+
+    if idtelephone:
+        conditions.append('idtelephone=?')
+        parameters.append(idtelephone)
+
+    if refagent:
+        conditions.append('refagent=?')
+        parameters.append(refagent)
+
+    if refagence:
+        conditions.append('refagence=?')
+        parameters.append(refagence)
+
+    if start_date and end_date:
+        start_date += ' 00:00:00'  # Ajout des heures, minutes et secondes
+        end_date += ' 23:59:59'  # Ajout des heures, minutes et secondes
+        conditions.append('datedepot BETWEEN ? AND ?')
+        parameters.extend([start_date, end_date])
+    elif start_date:
+        start_date += ' 00:00:00'  # Ajout des heures, minutes et secondes
+        end_date = start_date[:-9] + ' 23:59:59'  # Fin de la journée
+        conditions.append('datedepot BETWEEN ? AND ?')
+        parameters.extend([start_date, end_date])
+
+    # Ajouter la condition de filtrage pour les articles retirés ou non
+    if retirer is not None:
+        conditions.append('retirer=?')
+        parameters.append(retirer)
+
+    # Combiner toutes les conditions avec 'AND'
+    if conditions:
+        query += ' WHERE ' + ' AND '.join(conditions)
+
+    cursor.execute(query, parameters)
+    result = cursor.fetchone()
+
+    conn.close()
+    return result
+
+# Exemple d'utilisation avec tous les paramètres possibles
+statistics = calculate_article_statistics(refagent='rzakfirst',retirer=0)
+
+# Affichage des résultats
+print(statistics)

@@ -1,7 +1,11 @@
 import sqlite3
-from flask import Flask, request, jsonify, make_response, Blueprint
 from auth import get_user_variables
+from lastseen import update_last_seen
 from produits import fetch_produits_by_criteria
+from flask import Flask, request, jsonify
+from datetime import datetime
+
+
 
 def init_db():
     conn = sqlite3.connect('data.db')
@@ -17,22 +21,25 @@ def init_db():
                         refagence TEXT NOT NULL,
                         retirer BOOLEAN DEFAULT 0)''')
 
-    cursor.execute('''CREATE TABLE IF NOT EXISTS articles (
-                        id INTEGER PRIMARY KEY,
-                        article TEXT NOT NULL,
-                        quantite INTEGER,
-                        refid INTEGER,
-                        idtelephone INTEGER,
-                        montant FLOAT,
-                        mtotal FLOAT,
-                        refagent TEXT NOT NULL,
-                        refagence TEXT NOT NULL,
-                        datedepot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        daterdv TIMESTAMP,
-                        datemiseajour TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        retirer BOOLEAN DEFAULT 0,
-                        FOREIGN KEY (idtelephone) REFERENCES clients(id))''')
-    
+    cursor.execute('''CREATE TABLE IF NOT EXISTS "articles" (
+            "id"	INTEGER,
+            "article"	TEXT NOT NULL,
+            "quantite"	INTEGER,
+            "refid"	INTEGER,
+            "idtelephone"	INTEGER,
+            "montant"	FLOAT,
+            "mtotal"	FLOAT,
+            "refagent"	TEXT NOT NULL,
+            "refagence"	TEXT NOT NULL,
+            "datedepot"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "daterdv"	TIMESTAMP,
+            "datemiseajour"	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "retirer"	BOOLEAN DEFAULT 0,
+            "refcodepromo"	TEXT,
+            PRIMARY KEY("id"),
+            FOREIGN KEY("idtelephone") REFERENCES "clients"("id")
+        );''')
+            
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         telephone TEXT NOT NULL,
@@ -52,8 +59,7 @@ init_db()
 
 def add_client(nom, telephone, adresse, codepromo):
     # Récupérer les informations de l'utilisateur actuel
-    user_id, username, agence= get_user_variables()
-
+  
     # Connecter à la base de données
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()
@@ -75,23 +81,20 @@ def add_client(nom, telephone, adresse, codepromo):
 
     return client_info
 
-
 def add_article(article, quantite, refid, idtelephone, daterdv):
-
     user_id, telephone, username, agence, role, privileges = get_user_variables()
-
+    
     vararticle = fetch_produits_by_criteria(produit_id=article)
-
+    
+    
     if vararticle:
-     for produit in vararticle:
-        produit_id = produit['id']
-        nom = produit['nom']
-        prix = produit['prix']
-        dateadd = produit['dateadd']
-        datemiseamise = produit['datemiseamise']
-
-
-      
+        for produit in vararticle:
+            produit_id = produit['id']
+            nom = produit['nom']
+            prix = produit['prix']
+            dateadd = produit['dateadd']
+            datemiseamise = produit['datemiseamise']
+          
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()
     cursor.execute('INSERT INTO articles (article, quantite, refid, idtelephone, montant, mtotal, daterdv, refagent,refagence) VALUES (?, ?, ?, ?, ?, ?, ?,?,?)',
@@ -105,6 +108,9 @@ def add_article(article, quantite, refid, idtelephone, daterdv):
                     username,
                     agence ))
     conn.commit()
+
+    
+
     conn.close()
 
 def get_clients(identifier=None):
@@ -123,52 +129,6 @@ def get_clients(identifier=None):
     
     conn.close()
     return clients
-
-
-
-def repartir_montant(refid, idtelephone, montant_avance):
-    conn = sqlite3.connect('data.db')
-    cursor = conn.cursor()
-
-    # Sélectionner tous les articles du même refid et idtelephone, triés par montant décroissant
-    cursor.execute('SELECT * FROM articles WHERE refid=? AND idtelephone=? ORDER BY montant DESC', (refid, idtelephone))
-    articles = cursor.fetchall()
-
-    montant_restant = montant_avance
-
-    result = []
-    for article in articles:
-        montant_article = article[5]
-        if montant_restant >= montant_article:
-            montant_paye = montant_article
-            montant_restant -= montant_paye
-        else:
-            montant_paye = montant_restant
-            montant_restant = 0
-
-                      
-        result.append({
-            'id': article[0],
-            'article': article[1],
-            'quantite': article[2],
-            'refid': article[3],
-            'idtelephone': article[4],
-            'montant':montant_article,
-            'mtotal': article[6],
-            'montant_restant': montant_article - montant_paye,
-            'refagent': article[7],
-            'refagence': article[8],
-            'datedepot': article[9],
-            'daterdv': article[10],
-            'datemiseajour': article[11],
-            'retirer': article[12]
-              })
-
-
-
-    conn.close()
-    return result
-
 
 def repartir_montant(refid, idtelephone, montant_avance):
     conn = sqlite3.connect('data.db')

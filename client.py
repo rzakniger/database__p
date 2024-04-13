@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import sqlite3
 from auth import get_user_variables
+import json 
 
 clients_bp = Blueprint('clients_bp', __name__)
 
@@ -55,3 +56,74 @@ def add_client(nom, telephone, adresse, codepromo):
     conn.close()
 
     return client_info
+
+
+
+import sqlite3
+def calculate_client_statistics(client_id=None, telephone=None, codepromo=None):
+    conn = sqlite3.connect('data.db')
+    cursor = conn.cursor()
+
+    # Requête pour récupérer les statistiques des clients
+    query = 'SELECT COUNT(*) AS total_clients FROM clients'
+    conditions = []
+    parameters = []
+
+    # Ajouter les conditions de filtrage en fonction des paramètres fournis
+    if client_id:
+        conditions.append('id=?')
+        parameters.append(client_id)
+
+    if telephone:
+        conditions.append('telephone=?')
+        parameters.append(telephone)
+
+    if codepromo:
+        conditions.append('codepromo=?')
+        parameters.append(codepromo)
+
+    # Combiner toutes les conditions avec 'AND'
+    if conditions:
+        query += ' WHERE ' + ' AND '.join(conditions)
+
+    cursor.execute(query, parameters)
+    total_clients = cursor.fetchone()[0]  # Nombre total de clients
+
+    # Requête pour récupérer les statistiques des articles associés aux clients
+    if conditions:
+        articles_query = """
+                        SELECT SUM(quantite) AS total_quantite,
+                               SUM(CASE WHEN retirer=0 THEN quantite ELSE 0 END) AS total_quantite_non_retire,
+                               SUM(CASE WHEN retirer=1 THEN quantite ELSE 0 END) AS total_quantite_retire
+                        FROM articles
+                        WHERE refid IN (SELECT id FROM clients WHERE {})
+                        OR idtelephone IN (SELECT telephone FROM clients WHERE {})
+                        """.format(' AND '.join(conditions), ' AND '.join(conditions))
+        
+        # Remplacer la sous-requête avec des placeholders
+        articles_query = articles_query.format(' AND '.join(['?'] * len(conditions)), ' AND '.join(['?'] * len(conditions)))
+
+        # Passer les valeurs des paramètres dans la fonction execute
+        cursor.execute(articles_query, parameters * 2)  # Dupliquer les valeurs pour chaque placeholder
+    else:
+        articles_query = """
+                        SELECT SUM(quantite) AS total_quantite,
+                               SUM(CASE WHEN retirer=0 THEN quantite ELSE 0 END) AS total_quantite_non_retire,
+                               SUM(CASE WHEN retirer=1 THEN quantite ELSE 0 END) AS total_quantite_retire
+                        FROM articles
+                        """
+
+        cursor.execute(articles_query)
+
+    article_statistics = cursor.fetchone()
+
+    conn.close()
+
+    return total_clients, article_statistics
+
+# Exemple d'utilisation avec tous les paramètres possibles
+total_client, articlestatistics = calculate_client_statistics()
+
+# Affichage des résultats
+print("Nombre total de clients:", total_client)
+print("Statistiques des articles associés au client:", articlestatistics)

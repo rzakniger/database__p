@@ -1,13 +1,12 @@
 from flask import Flask,request,jsonify
-from database import add_client, add_article, get_clients, repartir_montant
-from article import modifier_articles, get_articles
-from facture import enregistrer_facture, fetch_facture_info
 from users import app as users_app
 from client import clients_bp
 from login import login_bp, token_required
 from produits import fetch_produits_by_criteria
 from agence import agence_bp
-
+from database import add_client, add_article, get_clients, repartir_montant
+from article import modifier_articles, get_articles
+from facture import enregistrer_facture, fetch_facture_info
 
 app = Flask(__name__)
 

@@ -3,8 +3,6 @@ from flask import Flask, request, jsonify, make_response, Blueprint
 from auth import get_user_variables
 from produits import fetch_produits_by_criteria
 
-
-
 def init_db():
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()

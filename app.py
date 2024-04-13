@@ -6,6 +6,7 @@ from users import app as users_app
 from client import clients_bp
 from login import login_bp, token_required
 from produits import fetch_produits_by_criteria
+from agence import agence_bp
 
 
 app = Flask(__name__)
@@ -105,6 +106,7 @@ def get_produits():
 app.register_blueprint(users_app)
 app.register_blueprint(login_bp)
 app.register_blueprint(clients_bp)
+app.register_blueprint(agence_bp)
 
 
 if __name__ == '__main__':
